@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Fertilizer Mixer Pro (Original + Fixed Date)</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* --- CSS Variables --- */
+        :root {
+            --primary-color: #05CD99;
+            --primary-dark: #02A176;
+            --secondary-color: #4318FF;
+            --bg-color: #F4F7FE;
+            --card-bg: #FFFFFF;
+            --text-main: #2B3674;
+            --text-secondary: #A3AED0;
+            --danger-color: #EE5D50;
+            --warning-color: #FFCE20;
+            --success-color: #00E676;
+            --sidebar-width: 280px;
+        }
+
+        /* --- Global Reset --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Prompt', sans-serif; background-color: var(--bg-color); color: var(--text-main); font-size: 16px; overflow-x: hidden; }
+
+        /* --- Layout & Login --- */
+        #loginPage { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: linear-gradient(135deg, #E0F7FA 0%, #E8EAF6 100%); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .login-card { background: white; padding: 50px 40px; border-radius: 24px; width: 90%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.05); text-align: center; }
+        .login-input { width: 100%; padding: 16px; margin-bottom: 20px; border: 1px solid #E0E5F2; border-radius: 16px; font-family: 'Prompt'; background: #F4F7FE; font-size: 16px; }
+        .btn-login { width: 100%; padding: 16px; background: linear-gradient(90deg, var(--primary-color) 0%, var(--primary-dark) 100%); color: white; border: none; border-radius: 16px; font-weight: 600; cursor: pointer; font-size: 18px; box-shadow: 0 10px 20px rgba(5, 205, 153, 0.3); transition: transform 0.2s; }
+        .btn-login:hover { transform: translateY(-2px); }
+
+        /* [NEW] Style สำหรับ Checkbox จำฉันไว้ในระบบ */
+        .remember-box {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 8px;
+            margin: -10px 0 20px 5px; /* ปรับระยะห่างให้พอดี */
+            width: 100%;
+        }
+        .remember-box label {
+            font-size: 14px;
+            color: #A3AED0;
+            cursor: pointer;
+            user-select: none;
+        }
+        .remember-box input[type="checkbox"] {
+            accent-color: var(--primary-color);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        #appContainer { display: none; min-height: 100vh; }
+        .sidebar { width: var(--sidebar-width); background: white; position: fixed; height: 100%; top: 0; left: 0; display: flex; flex-direction: column; z-index: 100; padding: 30px; border-right: 1px solid #F0F0F0; }
+        .brand { text-align: center; margin-bottom: 50px; padding-bottom: 20px; border-bottom: 1px solid #F4F7FE; }
+        .brand h2 { color: var(--text-main); margin: 0; font-size: 26px; font-weight: 800; }
+        .brand span { color: var(--primary-color); }
+        .menu { flex-grow: 1; display: flex; flex-direction: column; gap: 10px; }
+        .menu-item { display: flex; align-items: center; padding: 14px 20px; color: var(--text-secondary); text-decoration: none; border-radius: 14px; font-weight: 500; transition: all 0.3s; cursor: pointer; }
+        .menu-item:hover { background: #F4F7FE; color: var(--text-main); }
+        .menu-item.active { background: var(--primary-color); color: white; box-shadow: 0 10px 20px rgba(5, 205, 153, 0.2); }
+        .menu-item.active i { color: white; }
+        
+        .main-content { margin-left: var(--sidebar-width); padding: 40px; width: calc(100% - var(--sidebar-width)); }
+        .page-section { display: none; animation: fadeIn 0.3s; }
+        .page-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .page-title h1 { font-size: 30px; font-weight: 700; color: var(--text-main); margin-bottom: 5px; }
+        .connection-status { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; background: white; padding: 10px 20px; border-radius: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); color: var(--primary-color); }
+        .dot.online { width: 10px; height: 10px; border-radius: 50%; background: #00E676; box-shadow: 0 0 10px #00E676; animation: blink 2s infinite; }
+
+        /* --- Components --- */
+        .grid-container { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; }
+        .card { background: white; border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(112, 144, 176, 0.08); transition: transform 0.3s; border: 1px solid transparent; }
+        .card:hover { transform: translateY(-5px); border-color: #E0E5F2; }
+        
+        .sensor-card { grid-column: span 3; display: flex; flex-direction: column; justify-content: space-between; }
+        .sensor-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .icon-box { width: 48px; height: 48px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; }
+        .icon-ec { background: #E9FAF5; color: var(--primary-color); }
+        .icon-ph { background: #EAE6FF; color: var(--secondary-color); }
+        .icon-temp { background: #FFF7E6; color: var(--warning-color); }
+        .icon-flow { background: #FEEFEE; color: var(--danger-color); }
+        .sensor-val { font-size: 48px; font-weight: 700; color: var(--text-main); line-height: 1; }
+        .sensor-target { font-size: 13px; color: var(--text-secondary); background: #F4F7FE; padding: 6px 12px; border-radius: 10px; align-self: flex-start; display: inline-flex; gap: 5px; }
+        
+        /* Device & Log */
+        .device-panel { grid-column: span 4; }
+        .device-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .device-item { display: flex; align-items: center; gap: 15px; padding: 15px; border: 1px solid #E0E5F2; border-radius: 16px; transition: 0.3s; }
+        .device-item.active { border-color: var(--primary-color); background: #E9FAF5; }
+        .dev-icon { width: 45px; height: 45px; background: #F4F7FE; border-radius: 12px; display: flex; justify-content: center; align-items: center; color: var(--text-secondary); font-size: 18px; transition: 0.3s; }
+        .device-item.active .dev-icon { background: var(--primary-color); color: white; }
+        .dev-info { flex-grow: 1; }
+        .dev-name { font-weight: 600; font-size: 16px; color: var(--text-main); }
+        .dev-status { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+        .device-item.active .dev-status { color: var(--primary-color); font-weight: 700; }
+
+        .log-panel { grid-column: span 8; height: 320px; display: flex; flex-direction: column; }
+        .log-container { flex-grow: 1; overflow-y: auto; background: #111C44; color: #05CD99; font-family: monospace; padding: 20px; border-radius: 12px; margin-top: 10px; }
+        .log-line { margin-bottom: 6px; border-bottom: 1px dashed rgba(255,255,255,0.1); }
+
+        .tank-section { grid-column: span 12; display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+        .tank-box { text-align: center; background: white; padding: 30px 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(112, 144, 176, 0.08); transition: 0.3s; }
+        .glass-tube { height: 160px; width: 70px; margin: 0 auto 20px; background: #F4F7FE; border-radius: 35px; position: relative; overflow: hidden; border: 4px solid #fff; box-shadow: inset 0 0 15px rgba(0,0,0,0.05); }
+        .liquid { position: absolute; bottom: 0; left: 0; width: 100%; border-radius: 0 0 35px 35px; transition: height 1s linear; }
+        .liq-a { background: linear-gradient(to top, #FF5722, #FF8A65); }
+        .liq-b { background: linear-gradient(to top, #FFC107, #FFD54F); }
+        .liq-acid { background: linear-gradient(to top, #9C27B0, #BA68C8); }
+        .liq-mix { background: linear-gradient(to top, #2196F3, #64B5F6); }
+
+        .control-bar { grid-column: span 12; display: flex; justify-content: flex-end; gap: 15px; padding: 20px 0; }
+        .btn-ctrl { padding: 14px 35px; border-radius: 50px; border: none; font-size: 16px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 10px; transition: all 0.3s; }
+        .btn-start { background: linear-gradient(90deg, var(--primary-color) 0%, var(--primary-dark) 100%); color: white; box-shadow: 0 10px 20px rgba(5, 205, 153, 0.3); }
+        .btn-start:hover { transform: translateY(-2px); }
+        .btn-stop { background: white; color: var(--danger-color); border: 2px solid var(--danger-color); }
+        .btn-stop:hover { background: var(--danger-color); color: white; }
+
+        .progress-overlay { grid-column: span 12; background: white; padding: 20px; border-radius: 20px; display: none; align-items: center; gap: 20px; border: 1px solid #E0E5F2; box-shadow: 0 10px 30px rgba(112, 144, 176, 0.08); }
+        .progress-track { flex-grow: 1; height: 12px; background: #F4F7FE; border-radius: 6px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary-color); width: 0%; transition: width 0.1s; border-radius: 6px; }
+
+        .formula-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .formula-table th { text-align: left; padding: 15px; color: var(--text-secondary); font-weight: 600; border-bottom: 2px solid #F4F7FE; }
+        .formula-table td { padding: 20px 15px; color: var(--text-main); border-bottom: 1px solid #F4F7FE; font-weight: 500; }
+        .formula-table tr:hover { background-color: #FAFCFE; }
+        
+        /* [FIX] ปรับขนาดคอลัมน์ให้ตารางสวยงาม */
+        .formula-table td:first-child { min-width: 130px; }
+
+        .badge { padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; }
+        .badge-ec { background: #E9FAF5; color: var(--primary-color); }
+        .badge-ph { background: #EAE6FF; color: var(--secondary-color); }
+        .badge-success { background: #E9FAF5; color: var(--primary-color); border: 1px solid var(--primary-color); }
+        .badge-error { background: #FEEFEE; color: var(--danger-color); border: 1px solid var(--danger-color); }
+        
+        .filter-bar { display: flex; gap: 15px; margin-bottom: 20px; background: #FAFCFE; padding: 15px; border-radius: 12px; align-items: flex-end; border: 1px solid #E0E5F2; }
+        .filter-group { flex: 1; }
+        .filter-group label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 5px; }
+        .filter-input { width: 100%; padding: 10px; border: 1px solid #E0E5F2; border-radius: 8px; font-family: 'Prompt'; font-size: 14px; }
+        .btn-filter { height: 42px; padding: 0 25px; border-radius: 8px; background: var(--primary-color); color: white; border: none; font-weight: 600; cursor: pointer; box-shadow: 0 4px 10px rgba(5, 205, 153, 0.2); }
+        .btn-filter:hover { transform: translateY(-2px); }
+        .btn-export { height: 42px; padding: 0 25px; border-radius: 8px; background: white; color: var(--text-main); border: 1px solid #E0E5F2; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .btn-reset { height: 42px; padding: 0 15px; border-radius: 8px; background: #F4F7FE; color: var(--text-secondary); border: none; cursor: pointer; margin-left: 5px; }
+
+        .settings-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .settings-group { margin-bottom: 20px; }
+        .settings-group h4 { margin-bottom: 15px; color: var(--text-main); border-left: 4px solid var(--primary-color); padding-left: 10px; }
+        .btn-save { background: var(--secondary-color); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 2000; display: none; justify-content: center; align-items: center; }
+        .modal-box { background: white; padding: 40px; border-radius: 24px; width: 90%; max-width: 500px; animation: popIn 0.3s; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+        .form-label { font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; display: block; font-size: 14px; }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #E0E5F2; border-radius: 12px; background: white; margin-bottom: 20px; font-family: 'Prompt'; font-size: 16px; }
+        
+        .action-btn { width: 35px; height: 35px; border-radius: 10px; border: none; cursor: pointer; margin-right: 5px; }
+        .btn-edit { background: #FFF7E6; color: var(--warning-color); }
+        .btn-del { background: #FEEFEE; color: var(--danger-color); }
+        .btn-add-recipe { background: var(--primary-color); color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        @media (max-width: 1024px) { .settings-grid { grid-template-columns: 1fr; } .sensor-card { grid-column: span 6; } .device-panel, .log-panel { grid-column: span 12; } }
+        @media (max-width: 768px) { .sidebar { display: none; } .main-content { margin-left: 0; width: 100%; } .tank-section { grid-template-columns: repeat(2, 1fr); } .control-bar { flex-direction: column; } .btn-ctrl { width: 100%; justify-content: center; } }
+    </style>
+</head>
+<body>
+
+    <div id="loginPage">
+        <div class="login-card">
+            <h1 style="color:var(--text-main); margin-bottom:10px; font-weight:800;">SMART<span style="color:var(--primary-color)">FARM</span></h1>
+            <p style="color:var(--text-secondary); margin-bottom:40px; font-weight:500;">ระบบควบคุมการผสมปุ๋ยอัตโนมัติ</p>
+            <form onsubmit="event.preventDefault(); handleLogin();">
+                <input type="text" id="username" class="login-input" placeholder="Username" required>
+                <input type="password" id="password" class="login-input" placeholder="Password" required>
+                
+                <div class="remember-box">
+                    <input type="checkbox" id="rememberMe">
+                    <label for="rememberMe">จำฉันไว้ในระบบ</label>
+                </div>
+
+                <button type="submit" class="btn-login">เข้าสู่ระบบ</button>
+            </form>
+            <p id="loginError" style="color:var(--danger-color); margin-top:20px; display:none; font-size:14px; font-weight:600;"><i class="fa-solid fa-circle-exclamation"></i> ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</p>
+        </div>
+    </div>
+
+    <div id="appContainer">
+        <nav class="sidebar">
+            <div class="brand">
+                <h2>SMART<span>MIXER</span></h2>
+                <span style="font-size:12px; color:var(--text-secondary); font-weight:500; background:#F4F7FE; padding:4px 10px; border-radius:10px;">Pro v5.5 (Fixed)</span>
+            </div>
+            <div class="menu">
+                <div class="menu-item active" onclick="switchPage('dashboard')"><i class="fa-solid fa-chart-pie"></i> แดชบอร์ด</div>
+                <div class="menu-item" onclick="switchPage('formula')"><i class="fa-solid fa-flask"></i> จัดการสูตร</div>
+                <div class="menu-item" onclick="switchPage('history')"><i class="fa-solid fa-history"></i> ประวัติย้อนหลัง</div>
+                <div class="menu-item" onclick="switchPage('settings')"><i class="fa-solid fa-cog"></i> ตั้งค่าระบบ</div>
+            </div>
+            <div style="margin-top:auto;">
+                <div class="menu-item" style="color:var(--danger-color);" onclick="handleLogout()">
+                    <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
+                </div>
+            </div>
+        </nav>
+
+        <div class="main-content">
+            <div class="header">
+                <div class="page-title">
+                    <h1 id="pageTitle">ภาพรวมระบบ</h1>
+                    <p>ยินดีต้อนรับคุณ Admin, ระบบพร้อมใช้งาน</p>
+                </div>
+                <div class="connection-status"><div class="dot online"></div> บอร์ดควบคุม: ออนไลน์</div>
+            </div>
+
+            <div id="dashboardSection" class="page-section active">
+                <div class="grid-container">
+                    <div class="card sensor-card"><div class="sensor-header"><span class="sensor-title">ค่าปุ๋ย (EC)</span><div class="icon-box icon-ec"><i class="fa-solid fa-bolt"></i></div></div><div class="sensor-body"><span class="sensor-val" id="val_ec">1.8</span><span class="sensor-unit">mS/cm</span></div><div class="sensor-target"><i class="fa-solid fa-crosshairs"></i> เป้าหมาย: <strong>2.0</strong></div></div>
+                    <div class="card sensor-card"><div class="sensor-header"><span class="sensor-title">ค่ากรดด่าง (pH)</span><div class="icon-box icon-ph"><i class="fa-solid fa-droplet"></i></div></div><div class="sensor-body"><span class="sensor-val" id="val_ph">6.5</span><span class="sensor-unit">pH</span></div><div class="sensor-target"><i class="fa-solid fa-crosshairs"></i> เป้าหมาย: <strong>6.0</strong></div></div>
+                    <div class="card sensor-card"><div class="sensor-header"><span class="sensor-title">อุณหภูมิน้ำ</span><div class="icon-box icon-temp"><i class="fa-solid fa-temperature-half"></i></div></div><div class="sensor-body"><span class="sensor-val" id="val_temp">28.5</span><span class="sensor-unit">°C</span></div><div class="sensor-target"><i class="fa-solid fa-check-circle"></i> ปกติ</div></div>
+                    <div class="card sensor-card"><div class="sensor-header"><span class="sensor-title">อัตราการไหล</span><div class="icon-box icon-flow"><i class="fa-solid fa-wind"></i></div></div><div class="sensor-body"><span class="sensor-val" id="val_flow">0.0</span><span class="sensor-unit">L/min</span></div><div class="sensor-target">สถานะ: <strong id="status_text" style="color:var(--text-secondary);">Standby</strong></div></div>
+
+                    <div class="progress-overlay" id="progPanel" style="grid-column: span 12;">
+                        <div style="min-width: 150px;"><strong style="color:var(--primary-color); display:block; font-size:12px;">ACTIVE JOB</strong><span id="jobName" style="font-weight:600; font-size:16px;">ผสมสูตรสลัด</span></div>
+                        <div class="progress-track"><div class="progress-fill" id="progBar"></div></div>
+                        <span id="progText" style="font-weight:700; color:var(--primary-color); font-size:18px;">0%</span>
+                    </div>
+
+                    <div class="card device-panel">
+                        <div class="card-title">สถานะอุปกรณ์ (Devices)</div>
+                        <div class="device-grid">
+                            <div class="device-item" id="dev_pumpA"><div class="dev-icon"><i class="fa-solid fa-gas-pump"></i></div><div class="dev-info"><div class="dev-name">Pump A</div><div class="dev-status">Standby</div></div></div>
+                            <div class="device-item" id="dev_pumpB"><div class="dev-icon"><i class="fa-solid fa-gas-pump"></i></div><div class="dev-info"><div class="dev-name">Pump B</div><div class="dev-status">Standby</div></div></div>
+                            <div class="device-item" id="dev_acid"><div class="dev-icon"><i class="fa-solid fa-flask"></i></div><div class="dev-info"><div class="dev-name">Acid Pump</div><div class="dev-status">Standby</div></div></div>
+                            <div class="device-item" id="dev_mix"><div class="dev-icon"><i class="fa-solid fa-fan"></i></div><div class="dev-info"><div class="dev-name">Mixer</div><div class="dev-status">Standby</div></div></div>
+                        </div>
+                    </div>
+
+                    <div class="card log-panel">
+                        <div class="card-title">บันทึกการทำงาน</div>
+                        <div class="log-container" id="sysLog"><div class="log-line"><span class="log-time">[10:00:00]</span> System ready...</div></div>
+                    </div>
+
+                    <div class="tank-section">
+                        <div class="tank-box"><div class="glass-tube"><div class="liquid liq-a" id="tankA" style="height: 80%;"></div></div><div class="tank-title">ปุ๋ย A</div> <div class="tank-val">80%</div></div>
+                        <div class="tank-box"><div class="glass-tube"><div class="liquid liq-b" id="tankB" style="height: 60%;"></div></div><div class="tank-title">ปุ๋ย B</div> <div class="tank-val">60%</div></div>
+                        <div class="tank-box"><div class="glass-tube"><div class="liquid liq-acid" id="tankAcid" style="height: 90%;"></div></div><div class="tank-title">กรด</div> <div class="tank-val">90%</div></div>
+                        <div class="tank-box"><div class="glass-tube"><div class="liquid liq-mix" id="tankMix" style="height: 10%;"></div></div><div class="tank-title">ถังผสม</div> <div class="tank-val" id="mixLabel">10%</div></div>
+                    </div>
+
+                    <div class="control-bar">
+                        <button class="btn-ctrl btn-stop" onclick="stopSystem()"><i class="fa-solid fa-stop"></i> หยุดฉุกเฉิน (STOP)</button>
+                        <button class="btn-ctrl btn-start" onclick="openStartModal()"><i class="fa-solid fa-play"></i> เริ่มผสมปุ๋ย (START)</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="formulaSection" class="page-section">
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                        <h3 class="card-title" style="margin:0;">รายชื่อสูตรปุ๋ย (Recipes)</h3>
+                        <button class="btn-add-recipe" onclick="openFormulaModal()"><i class="fa-solid fa-plus"></i> สร้างสูตรใหม่</button>
+                    </div>
+                    
+                    <table class="formula-table">
+                        <thead><tr><th>ชื่อสูตร</th><th>Ratio A:B</th><th>EC เป้าหมาย</th><th>pH เป้าหมาย</th><th>แก้ไขล่าสุด</th><th>จัดการ</th></tr></thead>
+                        <tbody id="recipeTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="historySection" class="page-section">
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                        <h3 class="card-title" style="margin:0;">ประวัติการทำงาน (History Logs)</h3>
+                    </div>
+                    
+                    <div class="filter-bar">
+                        <div class="filter-group"><label>ตั้งแต่วันที่</label><input type="date" class="filter-input" id="filterStart"></div>
+                        <div class="filter-group"><label>ถึงวันที่</label><input type="date" class="filter-input" id="filterEnd"></div>
+                        <button class="btn-filter" onclick="filterHistory()"><i class="fa-solid fa-search"></i> ค้นหา</button>
+                        <button class="btn-reset" onclick="resetHistory()"><i class="fa-solid fa-rotate-left"></i> รีเซ็ต</button>
+                        <button class="btn-export" onclick="alert('Exporting to CSV...')"><i class="fa-solid fa-file-export"></i> Export CSV</button>
+                    </div>
+
+                    <table class="formula-table">
+                        <thead><tr><th>วัน/เวลา</th><th>สูตรที่ใช้</th><th>ปริมาณน้ำ</th><th>ผลลัพธ์ (Target / Actual)</th><th>สถานะ</th></tr></thead>
+                        <tbody id="historyTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="settingsSection" class="page-section">
+                <div class="grid-container settings-grid">
+                    <div class="card">
+                        <div class="settings-group">
+                            <h4><i class="fa-solid fa-microchip"></i> การปรับเทียบเซนเซอร์ (Calibration)</h4>
+                            <div style="margin-bottom:15px;">
+                                <label class="form-label">EC Sensor Offset</label>
+                                <div style="display:flex; gap:10px;"><input type="number" class="form-control" value="0.0" style="margin-bottom:0;"><button class="btn-save" onclick="alert('EC Calibrated!')">Calibrate</button></div>
+                            </div>
+                            <div>
+                                <label class="form-label">pH Sensor Offset</label>
+                                <div style="display:flex; gap:10px;"><input type="number" class="form-control" value="-0.2" style="margin-bottom:0;"><button class="btn-save" onclick="alert('pH Calibrated!')">Calibrate</button></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="settings-group">
+                            <h4><i class="fa-solid fa-gas-pump"></i> ตั้งค่าปั๊ม (Pump Config)</h4>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                                <div><label class="form-label">Pump A Speed (ml/s)</label><input type="number" class="form-control" value="50"></div>
+                                <div><label class="form-label">Pump B Speed (ml/s)</label><input type="number" class="form-control" value="50"></div>
+                                <div><label class="form-label">Acid Pump Speed (ml/s)</label><input type="number" class="form-control" value="30"></div>
+                                <div><label class="form-label">Mixing Time (min)</label><input type="number" class="form-control" value="15"></div>
+                            </div>
+                            <button class="btn-save" style="width:100%; margin-top:10px;" onclick="alert('Pump Settings Saved!')">บันทึกค่าปั๊ม</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="settings-group">
+                            <h4><i class="fa-brands fa-line"></i> การแจ้งเตือน (Notifications)</h4>
+                            <label class="form-label">LINE Notify Token</label>
+                            <input type="password" class="form-control" value="xxxxx-xxxxx-xxxxx" placeholder="Enter Token">
+                            <div style="display:flex; gap:10px;">
+                                <button class="btn-save" style="background:#00B900; flex:1;" onclick="alert('Test Message Sent!')">ทดสอบส่ง</button>
+                                <button class="btn-save" style="flex:1;" onclick="alert('Token Saved!')">บันทึก</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="settings-group">
+                            <h4><i class="fa-solid fa-shield-halved"></i> ความปลอดภัย (Safety Limits)</h4>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                                <div><label class="form-label">Max EC (mS/cm)</label><input type="number" class="form-control" value="3.0"></div>
+                                <div><label class="form-label">Min pH</label><input type="number" class="form-control" value="4.0"></div>
+                            </div>
+                            <button class="btn-save" style="width:100%; margin-top:10px; background:var(--danger-color);" onclick="alert('Safety Limits Updated!')">อัปเดตความปลอดภัย</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="startModal" style="display:none;">
+        <div class="modal-box">
+            <h3 style="margin-bottom:25px; color:var(--text-main); font-size:22px;">สั่งเริ่มผสมปุ๋ย</h3>
+            <label class="form-label">เลือกสูตรปุ๋ย</label>
+            <select class="form-control" id="selectRecipeStart"></select>
+            <div style="display:flex; gap:15px;">
+                <div style="flex:1;"><label class="form-label">น้ำ (ลิตร)</label><input type="number" class="form-control" value="1000"></div>
+                <div style="flex:1;"><label class="form-label">EC เป้าหมาย</label><input type="number" class="form-control" value="2.0"></div>
+            </div>
+            <div style="display:flex; gap:15px; margin-top:20px;">
+                <button class="btn-login" style="background:#F4F7FE; color:var(--text-main); box-shadow:none;" onclick="closeModal('startModal')">ยกเลิก</button>
+                <button class="btn-login" onclick="startSimulation()">ยืนยัน & เริ่มทำงาน</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="formulaModal" style="display:none;">
+        <div class="modal-box">
+            <h3 style="margin-bottom:25px; color:var(--text-main); font-size:22px;" id="modalTitle">สร้างสูตรใหม่</h3>
+            <input type="hidden" id="editId">
+            <label class="form-label">ชื่อสูตร</label>
+            <input type="text" class="form-control" id="formName" placeholder="เช่น ผักบุ้ง (โตเร็ว)">
+            <div style="display:flex; gap:15px;">
+                <div style="flex:1;"><label class="form-label">Target EC</label><input type="number" class="form-control" id="formEC" placeholder="1.8"></div>
+                <div style="flex:1;"><label class="form-label">Target pH</label><input type="number" class="form-control" id="formPH" placeholder="6.0"></div>
+            </div>
+            <div style="display:flex; gap:15px;">
+                <div style="flex:1;"><label class="form-label">อัตราส่วน (Ratio A:B)</label><input type="text" class="form-control" id="formRatio" placeholder="1:1"></div>
+                <div style="flex:1;"><label class="form-label">โหมดการผสม</label><select class="form-control" id="formMode"><option value="Standard">Standard</option><option value="Fast">Fast</option></select></div>
+            </div>
+            <label class="form-label">หมายเหตุ (Note)</label><textarea class="form-control" id="formNote" rows="3"></textarea>
+            <div style="display:flex; gap:15px; margin-top:10px;">
+                <button class="btn-login" style="background:#F4F7FE; color:var(--text-main); box-shadow:none;" onclick="closeModal('formulaModal')">ยกเลิก</button>
+                <button class="btn-login" onclick="saveRecipe()">บันทึกข้อมูล</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // GLOBAL VARIABLES
+        let simulationTimer = null;
+        let recipes = [
+            { id: 1, name: "ผักสลัด (ระยะอนุบาล)", ec: 0.8, ph: 6.0, ratio: "1:1", mode: "Standard", note: "สำหรับต้นกล้า 7-14 วัน", lastUpdate: "10/12/2024" },
+            { id: 2, name: "ผักสลัด (ระยะเติบโต)", ec: 1.6, ph: 6.0, ratio: "1:1", mode: "Standard", note: "ช่วงอายุ 15-40 วัน", lastUpdate: "11/12/2024" },
+            { id: 3, name: "เมล่อน (ช่วงทำหวาน)", ec: 2.5, ph: 6.5, ratio: "1:1.5", mode: "Standard", note: "เน้นปุ๋ย B เพิ่มความหวาน", lastUpdate: "12/12/2024" },
+            { id: 4, name: "มะเขือเทศ (ออกดอก)", ec: 2.8, ph: 6.2, ratio: "1:1", mode: "Fast", note: "ต้องการ EC สูงบำรุงผล", lastUpdate: "05/12/2024" },
+            { id: 5, name: "กัญชง (ทำใบ)", ec: 2.0, ph: 6.0, ratio: "1:1", mode: "Standard", note: "ช่วง Vegetative (18/6)", lastUpdate: "01/12/2024" }
+        ];
+        
+        // [FIXED] เก็บข้อมูลวันที่เป็น YYYY-MM-DD เพื่อให้เรียงลำดับถูกต้อง
+        let historyLogs = [
+            { date: "2026-01-06", time: "10:29:34", recipe: "ผักสลัด (ระยะอนุบาล)", vol: "1,000 L", target: "EC 1.6 / pH 6.0", actual: "EC 0.81 / pH 6.0", status: "success" },
+            { date: "2024-12-10", time: "08:30:00", recipe: "ผักสลัด (ระยะเติบโต)", vol: "1,000 L", target: "EC 1.6 / pH 6.0", actual: "EC 1.61 / pH 6.0", status: "success" },
+            { date: "2024-12-11", time: "10:00:00", recipe: "เมล่อน (ช่วงทำหวาน)", vol: "500 L", target: "EC 2.5 / pH 6.5", actual: "EC 2.49 / pH 6.5", status: "success" },
+            { date: "2024-12-12", time: "14:20:00", recipe: "มะเขือเทศ (ออกดอก)", vol: "1,000 L", target: "EC 2.8 / pH 6.2", actual: "EC 1.2 / pH 7.0", status: "error" },
+            { date: "2025-12-12", time: "00:49:30", recipe: "ผักสลัด (ระยะอนุบาล)", vol: "1,000 L", target: "EC 0.8", actual: "EC 0.79", status: "success" },
+            { date: "2025-12-12", time: "00:49:39", recipe: "กัญชง (ทำใบ)", vol: "1,000 L", target: "EC 2", actual: "EC 2.03", status: "success" }
+        ];
+
+        // --- Logic ---
+        function handleLogin() {
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value.trim();
+            if(u === 'admin' && p === 'admin') {
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+                renderRecipes(); 
+                renderHistory(); // เรียกฟังก์ชันแสดงผลตาราง
+                addLog("User 'Admin' logged in.");
+                
+                const Toast = Swal.mixin({
+                    toast: true, position: 'top-end', showConfirmButton: false, timer: 3000,
+                    timerProgressBar: true, didOpen: (toast) => { toast.addEventListener('mouseenter', Swal.stopTimer); toast.addEventListener('mouseleave', Swal.resumeTimer); }
+                });
+                Toast.fire({ icon: 'success', title: 'ยินดีต้อนรับเข้าสู่ระบบ!' });
+
+            } else { document.getElementById('loginError').style.display = 'block'; }
+        }
+        function handleLogout() { Swal.fire({ title: 'ยืนยัน?', text: "ต้องการออกจากระบบหรือไม่", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'ออกจากระบบ' }).then((result) => { if (result.isConfirmed) window.location.reload(); }) }
+
+        function switchPage(page) {
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(page + 'Section').classList.add('active');
+            const titles = { 'dashboard': 'ภาพรวมระบบ', 'formula': 'จัดการสูตรปุ๋ย', 'history': 'ประวัติย้อนหลัง', 'settings': 'ตั้งค่าระบบ' };
+            document.getElementById('pageTitle').innerText = titles[page];
+        }
+
+        // --- Formula ---
+        function renderRecipes() {
+            const tbody = document.getElementById('recipeTableBody'); const select = document.getElementById('selectRecipeStart');
+            tbody.innerHTML = ''; select.innerHTML = '';
+            recipes.forEach((r, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td><strong>${r.name}</strong><br><span style="font-size:12px; color:#aaa;">${r.note}</span></td><td>${r.ratio}</td><td><span class="badge badge-ec">${r.ec}</span></td><td><span class="badge badge-ph">${r.ph}</span></td><td style="font-size:12px; color:#888;">${r.lastUpdate}</td><td><button class="action-btn btn-edit" onclick="editRecipe(${r.id})"><i class="fa-solid fa-pen"></i></button><button class="action-btn btn-del" onclick="deleteRecipe(${index})"><i class="fa-solid fa-trash"></i></button></td>`;
+                tbody.appendChild(tr);
+                const opt = document.createElement('option'); opt.value = r.id; opt.innerText = r.name; select.appendChild(opt);
+            });
+        }
+        function openFormulaModal() { document.getElementById('modalTitle').innerText = "สร้างสูตรใหม่"; document.getElementById('editId').value = ""; document.getElementById('formName').value = ""; document.getElementById('formEC').value = ""; document.getElementById('formPH').value = ""; document.getElementById('formRatio').value = "1:1"; document.getElementById('formMode').value = "Standard"; document.getElementById('formNote').value = ""; document.getElementById('formulaModal').style.display = 'flex'; }
+        function editRecipe(id) { const r = recipes.find(item => item.id === id); if(r) { document.getElementById('modalTitle').innerText = "แก้ไขสูตร"; document.getElementById('editId').value = r.id; document.getElementById('formName').value = r.name; document.getElementById('formEC').value = r.ec; document.getElementById('formPH').value = r.ph; document.getElementById('formRatio').value = r.ratio; document.getElementById('formMode').value = r.mode; document.getElementById('formNote').value = r.note; document.getElementById('formulaModal').style.display = 'flex'; } }
+        function saveRecipe() { 
+            const id = document.getElementById('editId').value; const name = document.getElementById('formName').value; const ec = document.getElementById('formEC').value; const ph = document.getElementById('formPH').value; const ratio = document.getElementById('formRatio').value; const mode = document.getElementById('formMode').value; const note = document.getElementById('formNote').value; const date = new Date().toLocaleDateString('th-TH'); 
+            if(name && ec && ph) { 
+                if(id) { const index = recipes.findIndex(item => item.id == id); if(index !== -1) recipes[index] = { id: parseInt(id), name, ec, ph, ratio, mode, note, lastUpdate: date }; } 
+                else { recipes.push({ id: Date.now(), name, ec, ph, ratio, mode, note, lastUpdate: date }); } 
+                renderRecipes(); closeModal('formulaModal'); 
+                Swal.fire('บันทึกสำเร็จ!', 'ข้อมูลสูตรถูกบันทึกเรียบร้อยแล้ว', 'success');
+            } else { Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกชื่อ สูตร EC และ pH', 'warning'); } 
+        }
+        function deleteRecipe(index) { Swal.fire({ title: 'ยืนยันการลบ?', text: "คุณจะไม่สามารถกู้คืนสูตรนี้ได้!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'ลบเลย!' }).then((result) => { if (result.isConfirmed) { recipes.splice(index, 1); renderRecipes(); Swal.fire('ลบแล้ว!', 'สูตรปุ๋ยถูกลบออกจากระบบ', 'success'); } }) }
+
+        // --- [FIXED] History Function ---
+        function renderHistory(data = historyLogs) {
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '';
+
+            // 1. เรียงลำดับข้อมูล: ใหม่สุด -> เก่าสุด (ใช้ YYYY-MM-DD Sort)
+            data.sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
+
+            if(data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#aaa;">ไม่พบข้อมูลในช่วงเวลานี้</td></tr>';
+                return;
+            }
+
+            data.forEach(log => {
+                // 2. แปลงวันที่เป็นไทย (วว/ดด/พ.ศ.) เพื่อแสดงผล
+                const dateObj = new Date(log.date);
+                const day = dateObj.getDate();
+                const month = dateObj.getMonth() + 1;
+                const year = dateObj.getFullYear() + 543; // แปลงเป็น พ.ศ.
+                const formattedDate = `${day}/${month}/${year}`;
+
+                let badgeClass = log.status === 'success' ? 'badge-success' : 'badge-error';
+                let statusText = log.status === 'success' ? 'เสร็จสิ้น' : 'หยุด/ขัดข้อง';
+                let icon = log.status === 'success' ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-xmark"></i>';
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div style="font-weight:700; font-size:16px;">${formattedDate}</div>
+                        <div style="font-size:13px; color:#A3AED0;">${log.time}</div>
+                    </td>
+                    <td>${log.recipe}</td>
+                    <td>${log.vol}</td>
+                    <td><span style="font-size:12px; color:#aaa;">Target: ${log.target}</span><br><strong>Actual: ${log.actual}</strong></td>
+                    <td><span class="badge ${badgeClass}">${icon} ${statusText}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // [FIXED] Add History with correct Date Format
+        function addToHistory(recipeName, vol, targetEC, actualEC) { 
+            const now = new Date(); 
+            const dateStr = now.toISOString().split('T')[0]; // 2025-01-06 (Format for Sorting)
+            const timeStr = now.toLocaleTimeString('th-TH');
+            
+            const newLog = { 
+                date: dateStr, 
+                time: timeStr, 
+                recipe: recipeName, 
+                vol: vol + " L", 
+                target: `EC ${targetEC}`, 
+                actual: `EC ${actualEC}`, 
+                status: 'success' 
+            }; 
+            historyLogs.unshift(newLog); 
+            renderHistory(); 
+        }
+
+        function filterHistory() {
+            const startVal = document.getElementById('filterStart').value;
+            const endVal = document.getElementById('filterEnd').value;
+            if(!startVal || !endVal) { Swal.fire('แจ้งเตือน', 'กรุณาเลือกวันที่เริ่มต้นและสิ้นสุด', 'info'); return; }
+            
+            const startDate = new Date(startVal); startDate.setHours(0,0,0,0);
+            const endDate = new Date(endVal); endDate.setHours(23,59,59,999);
+            
+            const filtered = historyLogs.filter(log => {
+                const logDate = new Date(log.date);
+                return logDate >= startDate && logDate <= endDate;
+            });
+            renderHistory(filtered);
+        }
+        function resetHistory() { document.getElementById('filterStart').value = ''; document.getElementById('filterEnd').value = ''; renderHistory(historyLogs); }
+
+        // --- Utils & Sim ---
+        function openStartModal() { document.getElementById('startModal').style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function addLog(msg) { const t = new Date().toLocaleTimeString('th-TH'); const b = document.getElementById('sysLog'); b.innerHTML += `<div class="log-line"><span class="log-time">[${t}]</span> ${msg}</div>`; b.scrollTop = b.scrollHeight; }
+        
+        function setDeviceStatus(id, isWorking) {
+            const el = document.getElementById('dev_' + id);
+            const statusText = el.querySelector('.dev-status');
+            if(isWorking) {
+                el.classList.add('active');
+                statusText.innerText = 'Working';
+            } else {
+                el.classList.remove('active');
+                statusText.innerText = 'Standby';
+            }
+        }
+
+        function stopSystem() {
+            if(simulationTimer) clearInterval(simulationTimer);
+            setDeviceStatus('pumpA', false); setDeviceStatus('pumpB', false); 
+            setDeviceStatus('acid', false); setDeviceStatus('mix', false);
+            
+            document.getElementById('val_flow').innerText = "0.0";
+            document.getElementById('status_text').innerText = "Emergency Stop";
+            document.getElementById('status_text').style.color = "var(--danger-color)";
+            document.getElementById('progPanel').style.display = 'none';
+            addLog("⚠️ SYSTEM STOPPED BY USER (EMERGENCY)");
+            
+            Swal.fire({
+                title: 'หยุดฉุกเฉิน!',
+                text: 'ระบบถูกตัดการทำงานทันที',
+                icon: 'error',
+                confirmButtonColor: '#EE5D50'
+            });
+        }
+
+        function startSimulation() {
+            closeModal('startModal');
+            const recipeId = document.getElementById('selectRecipeStart').value;
+            const r = recipes.find(item => item.id == recipeId);
+            addLog(`Command: Start Auto Mix '${r.name}'`);
+            
+            if(simulationTimer) clearInterval(simulationTimer);
+            document.getElementById('progPanel').style.display = 'flex';
+            document.getElementById('jobName').innerText = r.name;
+            document.getElementById('status_text').innerText = "Running";
+            document.getElementById('status_text').style.color = "var(--primary-color)";
+
+            setDeviceStatus('pumpA', false); setDeviceStatus('pumpB', false); 
+            setDeviceStatus('acid', false); setDeviceStatus('mix', false);
+
+            let progress = 0;
+            let tankMixLevel = 10;
+            let finalEC = 0;
+            
+            simulationTimer = setInterval(() => {
+                progress += 1;
+                document.getElementById('progBar').style.width = progress + '%';
+                document.getElementById('progText').innerText = progress + '%';
+
+                if (progress < 30) {
+                    setDeviceStatus('pumpA', true); setDeviceStatus('pumpB', false);
+                    document.getElementById('val_flow').innerText = (Math.random()*2+1).toFixed(1);
+                    tankMixLevel += 1;
+                } else if (progress < 60) {
+                    setDeviceStatus('pumpA', false); setDeviceStatus('pumpB', true);
+                    tankMixLevel += 1;
+                } else if (progress < 80) {
+                    setDeviceStatus('pumpB', false); setDeviceStatus('acid', true); setDeviceStatus('mix', true);
+                } else {
+                    setDeviceStatus('acid', false); setDeviceStatus('mix', true);
+                    finalEC = (r.ec - 0.05 + Math.random()*0.1).toFixed(2);
+                    document.getElementById('val_ec').innerText = finalEC;
+                }
+                
+                document.getElementById('tankMix').style.height = tankMixLevel + '%';
+                document.getElementById('mixLabel').innerText = tankMixLevel + '%';
+
+                if (progress >= 100) {
+                    clearInterval(simulationTimer);
+                    finishJob(r.name, r.ec, finalEC);
+                }
+            }, 100); 
+        }
+
+        function finishJob(recipeName, targetEC, finalEC) {
+            setDeviceStatus('mix', false); setDeviceStatus('pumpA', false); 
+            setDeviceStatus('pumpB', false); setDeviceStatus('acid', false);
+
+            document.getElementById('val_flow').innerText = "0.0";
+            document.getElementById('status_text').innerText = "Completed";
+            document.getElementById('status_text').style.color = "var(--primary-color)";
+            addLog("Job Completed Successfully.");
+            addToHistory(recipeName, "1,000", targetEC, finalEC);
+            
+            Swal.fire({
+                title: 'เสร็จสิ้น!',
+                text: `ผสมปุ๋ยสูตร "${recipeName}" เรียบร้อยแล้ว (EC: ${finalEC})`,
+                icon: 'success',
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: '#05CD99'
+            }).then(() => {
+                document.getElementById('progPanel').style.display = 'none';
+                document.getElementById('progBar').style.width = '0%';
+                document.getElementById('status_text').innerText = "Standby";
+                document.getElementById('status_text').style.color = "var(--text-secondary)";
+            });
+        }
+    </script>
+</body>
+</html>
