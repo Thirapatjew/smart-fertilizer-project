@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Fertilizer Mixer Pro (Original + Fixed Date)</title>
+    <title>Smart Fertilizer Mixer Pro</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -37,13 +37,12 @@
         .btn-login { width: 100%; padding: 16px; background: linear-gradient(90deg, var(--primary-color) 0%, var(--primary-dark) 100%); color: white; border: none; border-radius: 16px; font-weight: 600; cursor: pointer; font-size: 18px; box-shadow: 0 10px 20px rgba(5, 205, 153, 0.3); transition: transform 0.2s; }
         .btn-login:hover { transform: translateY(-2px); }
 
-        /* [NEW] Style สำหรับ Checkbox จำฉันไว้ในระบบ */
         .remember-box {
             display: flex;
             align-items: center;
             justify-content: flex-start;
             gap: 8px;
-            margin: -10px 0 20px 5px; /* ปรับระยะห่างให้พอดี */
+            margin: -10px 0 20px 5px;
             width: 100%;
         }
         .remember-box label {
@@ -136,7 +135,6 @@
         .formula-table td { padding: 20px 15px; color: var(--text-main); border-bottom: 1px solid #F4F7FE; font-weight: 500; }
         .formula-table tr:hover { background-color: #FAFCFE; }
         
-        /* [FIX] ปรับขนาดคอลัมน์ให้ตารางสวยงาม */
         .formula-table td:first-child { min-width: 130px; }
 
         .badge { padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; }
@@ -201,8 +199,7 @@
         <nav class="sidebar">
             <div class="brand">
                 <h2>SMART<span>MIXER</span></h2>
-                <span style="font-size:12px; color:var(--text-secondary); font-weight:500; background:#F4F7FE; padding:4px 10px; border-radius:10px;">Pro v5.5 (Fixed)</span>
-            </div>
+                </div>
             <div class="menu">
                 <div class="menu-item active" onclick="switchPage('dashboard')"><i class="fa-solid fa-chart-pie"></i> แดชบอร์ด</div>
                 <div class="menu-item" onclick="switchPage('formula')"><i class="fa-solid fa-flask"></i> จัดการสูตร</div>
@@ -220,8 +217,7 @@
             <div class="header">
                 <div class="page-title">
                     <h1 id="pageTitle">ภาพรวมระบบ</h1>
-                    <p>ยินดีต้อนรับคุณ Admin, ระบบพร้อมใช้งาน</p>
-                </div>
+                    </div>
                 <div class="connection-status"><div class="dot online"></div> บอร์ดควบคุม: ออนไลน์</div>
             </div>
 
@@ -408,7 +404,6 @@
             { id: 5, name: "กัญชง (ทำใบ)", ec: 2.0, ph: 6.0, ratio: "1:1", mode: "Standard", note: "ช่วง Vegetative (18/6)", lastUpdate: "01/12/2024" }
         ];
         
-        // [FIXED] เก็บข้อมูลวันที่เป็น YYYY-MM-DD เพื่อให้เรียงลำดับถูกต้อง
         let historyLogs = [
             { date: "2026-01-06", time: "10:29:34", recipe: "ผักสลัด (ระยะอนุบาล)", vol: "1,000 L", target: "EC 1.6 / pH 6.0", actual: "EC 0.81 / pH 6.0", status: "success" },
             { date: "2024-12-10", time: "08:30:00", recipe: "ผักสลัด (ระยะเติบโต)", vol: "1,000 L", target: "EC 1.6 / pH 6.0", actual: "EC 1.61 / pH 6.0", status: "success" },
@@ -472,27 +467,21 @@
         }
         function deleteRecipe(index) { Swal.fire({ title: 'ยืนยันการลบ?', text: "คุณจะไม่สามารถกู้คืนสูตรนี้ได้!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'ลบเลย!' }).then((result) => { if (result.isConfirmed) { recipes.splice(index, 1); renderRecipes(); Swal.fire('ลบแล้ว!', 'สูตรปุ๋ยถูกลบออกจากระบบ', 'success'); } }) }
 
-        // --- [FIXED] History Function ---
+        // --- History Function ---
         function renderHistory(data = historyLogs) {
             const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = '';
-
-            // 1. เรียงลำดับข้อมูล: ใหม่สุด -> เก่าสุด (ใช้ YYYY-MM-DD Sort)
             data.sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
-
             if(data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#aaa;">ไม่พบข้อมูลในช่วงเวลานี้</td></tr>';
                 return;
             }
-
             data.forEach(log => {
-                // 2. แปลงวันที่เป็นไทย (วว/ดด/พ.ศ.) เพื่อแสดงผล
                 const dateObj = new Date(log.date);
                 const day = dateObj.getDate();
                 const month = dateObj.getMonth() + 1;
                 const year = dateObj.getFullYear() + 543; // แปลงเป็น พ.ศ.
                 const formattedDate = `${day}/${month}/${year}`;
-
                 let badgeClass = log.status === 'success' ? 'badge-success' : 'badge-error';
                 let statusText = log.status === 'success' ? 'เสร็จสิ้น' : 'หยุด/ขัดข้อง';
                 let icon = log.status === 'success' ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-xmark"></i>';
@@ -511,13 +500,10 @@
                 tbody.appendChild(tr);
             });
         }
-
-        // [FIXED] Add History with correct Date Format
         function addToHistory(recipeName, vol, targetEC, actualEC) { 
             const now = new Date(); 
-            const dateStr = now.toISOString().split('T')[0]; // 2025-01-06 (Format for Sorting)
+            const dateStr = now.toISOString().split('T')[0]; 
             const timeStr = now.toLocaleTimeString('th-TH');
-            
             const newLog = { 
                 date: dateStr, 
                 time: timeStr, 
@@ -530,15 +516,12 @@
             historyLogs.unshift(newLog); 
             renderHistory(); 
         }
-
         function filterHistory() {
             const startVal = document.getElementById('filterStart').value;
             const endVal = document.getElementById('filterEnd').value;
             if(!startVal || !endVal) { Swal.fire('แจ้งเตือน', 'กรุณาเลือกวันที่เริ่มต้นและสิ้นสุด', 'info'); return; }
-            
             const startDate = new Date(startVal); startDate.setHours(0,0,0,0);
             const endDate = new Date(endVal); endDate.setHours(23,59,59,999);
-            
             const filtered = historyLogs.filter(log => {
                 const logDate = new Date(log.date);
                 return logDate >= startDate && logDate <= endDate;
@@ -568,13 +551,11 @@
             if(simulationTimer) clearInterval(simulationTimer);
             setDeviceStatus('pumpA', false); setDeviceStatus('pumpB', false); 
             setDeviceStatus('acid', false); setDeviceStatus('mix', false);
-            
             document.getElementById('val_flow').innerText = "0.0";
             document.getElementById('status_text').innerText = "Emergency Stop";
             document.getElementById('status_text').style.color = "var(--danger-color)";
             document.getElementById('progPanel').style.display = 'none';
             addLog("⚠️ SYSTEM STOPPED BY USER (EMERGENCY)");
-            
             Swal.fire({
                 title: 'หยุดฉุกเฉิน!',
                 text: 'ระบบถูกตัดการทำงานทันที',
@@ -588,25 +569,20 @@
             const recipeId = document.getElementById('selectRecipeStart').value;
             const r = recipes.find(item => item.id == recipeId);
             addLog(`Command: Start Auto Mix '${r.name}'`);
-            
             if(simulationTimer) clearInterval(simulationTimer);
             document.getElementById('progPanel').style.display = 'flex';
             document.getElementById('jobName').innerText = r.name;
             document.getElementById('status_text').innerText = "Running";
             document.getElementById('status_text').style.color = "var(--primary-color)";
-
             setDeviceStatus('pumpA', false); setDeviceStatus('pumpB', false); 
             setDeviceStatus('acid', false); setDeviceStatus('mix', false);
-
             let progress = 0;
             let tankMixLevel = 10;
             let finalEC = 0;
-            
             simulationTimer = setInterval(() => {
                 progress += 1;
                 document.getElementById('progBar').style.width = progress + '%';
                 document.getElementById('progText').innerText = progress + '%';
-
                 if (progress < 30) {
                     setDeviceStatus('pumpA', true); setDeviceStatus('pumpB', false);
                     document.getElementById('val_flow').innerText = (Math.random()*2+1).toFixed(1);
@@ -621,10 +597,8 @@
                     finalEC = (r.ec - 0.05 + Math.random()*0.1).toFixed(2);
                     document.getElementById('val_ec').innerText = finalEC;
                 }
-                
                 document.getElementById('tankMix').style.height = tankMixLevel + '%';
                 document.getElementById('mixLabel').innerText = tankMixLevel + '%';
-
                 if (progress >= 100) {
                     clearInterval(simulationTimer);
                     finishJob(r.name, r.ec, finalEC);
@@ -635,13 +609,11 @@
         function finishJob(recipeName, targetEC, finalEC) {
             setDeviceStatus('mix', false); setDeviceStatus('pumpA', false); 
             setDeviceStatus('pumpB', false); setDeviceStatus('acid', false);
-
             document.getElementById('val_flow').innerText = "0.0";
             document.getElementById('status_text').innerText = "Completed";
             document.getElementById('status_text').style.color = "var(--primary-color)";
             addLog("Job Completed Successfully.");
             addToHistory(recipeName, "1,000", targetEC, finalEC);
-            
             Swal.fire({
                 title: 'เสร็จสิ้น!',
                 text: `ผสมปุ๋ยสูตร "${recipeName}" เรียบร้อยแล้ว (EC: ${finalEC})`,
