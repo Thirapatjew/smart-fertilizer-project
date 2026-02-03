@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Fertilizer Mixer Pro (Mobile App Ready)</title>
+    <title>Smart Fertilizer Mixer Pro (Minimal Error)</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -40,6 +40,28 @@
         .login-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(5, 205, 153, 0.1); background: white; }
         .btn-login { width: 100%; padding: 16px; background: linear-gradient(90deg, var(--primary-color) 0%, var(--primary-dark) 100%); color: white; border: none; border-radius: 16px; font-weight: 600; cursor: pointer; font-size: 16px; box-shadow: 0 10px 20px rgba(5, 205, 153, 0.3); transition: transform 0.2s; }
         .btn-login:hover { transform: translateY(-2px); }
+
+        /* --- LOGIN ERROR (MINIMAL STYLE) --- */
+        .login-error-msg {
+            display: none; /* ซ่อนไว้ก่อน */
+            color: var(--danger-color); /* ตัวหนังสือสีแดง */
+            font-size: 14px;
+            margin-bottom: 20px; /* เว้นระยะห่างจากปุ่ม */
+            text-align: left; /* ชิดซ้ายให้ตรงกับช่องกรอก */
+            font-weight: 500;
+            align-items: center;
+            gap: 8px;
+            animation: shake 0.4s ease-in-out;
+            /* เอา Background และ Border ออกหมดแล้ว */
+        }
+        
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
 
         .remember-box { display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin-bottom: 25px; width: 100%; padding-left: 5px; }
         .remember-box input[type="checkbox"] { accent-color: var(--primary-color); width: 18px; height: 18px; cursor: pointer; }
@@ -183,7 +205,6 @@
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
         
-        /* --- MOBILE RESPONSIVE FIXES --- */
         @media (max-width: 768px) { 
             .sidebar { transform: translateX(-100%); position: fixed; height: 100%; z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.1); } 
             .sidebar.active { transform: translateX(0); }
@@ -212,6 +233,12 @@
             <form onsubmit="event.preventDefault(); handleLogin();">
                 <input type="text" id="username" class="login-input" placeholder="Username" required>
                 <input type="password" id="password" class="login-input" placeholder="Password" required>
+                
+                <div id="loginError" class="login-error-msg">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span>Username หรือ Password ไม่ถูกต้อง</span>
+                </div>
+
                 <div class="remember-box"><input type="checkbox" id="rememberMe"><label for="rememberMe">จำฉันไว้ในระบบ</label></div>
                 <button type="submit" class="btn-login">เข้าสู่ระบบ</button>
             </form>
@@ -380,16 +407,30 @@
 
         // --- AUTH & NAV ---
         function handleLogin() {
-            if(document.getElementById('username').value === 'admin' && document.getElementById('password').value === 'admin') {
+            const userIn = document.getElementById('username').value;
+            const passIn = document.getElementById('password').value;
+            const errorEl = document.getElementById('loginError');
+
+            if(userIn === 'admin' && passIn === 'admin') {
+                // Success
+                errorEl.style.display = 'none'; // ซ่อนแจ้งเตือน
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
+                
                 document.getElementById('inputStartDate').valueAsDate = new Date();
                 document.getElementById('newJobDate').valueAsDate = new Date();
                 document.getElementById('newJobTime').value = "09:00";
+                
                 renderProfiles();
                 renderSchedule();
                 updateDashboard();
-            } else { alert('User/Pass ผิดครับ (admin/admin)'); }
+            } else { 
+                // Failed -> Show Inline Error
+                errorEl.style.display = 'flex';
+                // ถ้าอยากให้ช่องสั่นด้วย (Optional)
+                document.getElementById('password').value = '';
+                document.getElementById('password').focus();
+            }
         }
         function handleLogout() { location.reload(); }
         function switchPage(page) {
@@ -718,7 +759,7 @@
             if(nextJob) { document.getElementById('dash_target_ec').innerText = nextJob.ec; document.getElementById('dash_target_ph').innerText = nextJob.ph; } else { document.getElementById('dash_target_ec').innerText = '-'; document.getElementById('dash_target_ph').innerText = '-'; }
         }
 
-        // --- UPDATED RUN SIMULATION (SEQUENTIAL: A -> B -> Mix) ---
+        // --- UPDATED RUN SIMULATION (SEQUENTIAL) ---
         function runNextJob() {
             if(isManualMode) { Swal.fire('โหมด Manual', 'กรุณาปรับเป็น Auto เพื่อเริ่มการทำงานตามตาราง', 'warning'); return; }
             const job = mainSchedule.find(j => j.status === 'pending' && j.enabled);
