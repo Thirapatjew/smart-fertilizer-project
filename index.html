@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Fertilizer Mixer Pro (Minimal Error)</title>
+    <title>Smart Fertilizer Mixer Pro (Dynamic Recipe Edition)</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -43,16 +43,15 @@
 
         /* --- LOGIN ERROR (MINIMAL STYLE) --- */
         .login-error-msg {
-            display: none; /* ซ่อนไว้ก่อน */
-            color: var(--danger-color); /* ตัวหนังสือสีแดง */
+            display: none;
+            color: var(--danger-color);
             font-size: 14px;
-            margin-bottom: 20px; /* เว้นระยะห่างจากปุ่ม */
-            text-align: left; /* ชิดซ้ายให้ตรงกับช่องกรอก */
+            margin-bottom: 20px;
+            text-align: left;
             font-weight: 500;
             align-items: center;
             gap: 8px;
             animation: shake 0.4s ease-in-out;
-            /* เอา Background และ Border ออกหมดแล้ว */
         }
         
         @keyframes shake {
@@ -298,7 +297,7 @@
                             <div class="device-card" id="dev_pumpB" onclick="toggleDevice(this)"><div class="device-icon"><i class="fa-solid fa-faucet"></i></div><div class="device-name">ปั๊ม B</div><div class="device-status">OFF</div></div>
                             <div class="device-card" id="dev_pumpUp" onclick="toggleDevice(this)"><div class="device-icon"><i class="fa-solid fa-arrow-up"></i></div><div class="device-name">ปั๊ม pH Up</div><div class="device-status">OFF</div></div>
                             <div class="device-card" id="dev_pumpDown" onclick="toggleDevice(this)"><div class="device-icon"><i class="fa-solid fa-arrow-down"></i></div><div class="device-name">ปั๊ม pH Down</div><div class="device-status">OFF</div></div>
-                            <div class="device-card" id="dev_pumpMix" onclick="toggleDevice(this)"><div class="device-icon"><i class="fa-solid fa-fan"></i></div><div class="device-name">ปั๊มน้ำวน</div><div class="device-status">OFF</div></div>
+                            <div class="device-card" id="dev_pumpMix" onclick="toggleDevice(this)"><div class="device-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div><div class="device-name">วัดค่าปุ๋ย</div><div class="device-status">OFF</div></div>
                         </div>
                     </div>
 
@@ -385,7 +384,43 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="createRecipeModal"><div class="modal-box"><h3 style="margin-bottom:20px; text-align:center;">สร้างสูตรพืชใหม่</h3><div class="form-group"><label class="form-label">ชื่อสูตร</label><input type="text" class="form-control" id="newRecipeName" placeholder="เช่น ผักบุ้งจีน"></div><div class="form-group"><label class="form-label">ระยะเวลาปลูกรวม (วัน)</label><input type="number" class="form-control" id="newRecipeDays" placeholder="45"></div><div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;"><div class="form-group"><label class="form-label">ค่า EC เริ่มต้น</label><input type="number" step="0.1" class="form-control" id="newRecipeEC" value="1.0"></div><div class="form-group"><label class="form-label">ค่า pH มาตรฐาน</label><input type="number" step="0.1" class="form-control" id="newRecipePH" value="6.0"></div></div><div style="margin-top:10px; border-top:1px solid #eee; padding-top:10px;"><p style="font-size:13px; color:#aaa; margin-bottom:10px; text-align:center;">*ระบบจะใช้ค่า EC และ pH ที่ระบุเป็นค่าเริ่มต้นสำหรับทุกระยะ</p></div><div style="display:flex; gap:10px; margin-top:20px;"><button class="btn-action" style="flex:1; justify-content:center; background:#F4F7FE; color:var(--text-main);" onclick="closeModal('createRecipeModal')">ยกเลิก</button><button class="btn-action btn-primary" style="flex:1; justify-content:center;" onclick="confirmCreateRecipe()">บันทึกสูตร</button></div></div></div>
+    <div class="modal-overlay" id="createRecipeModal">
+        <div class="modal-box" style="max-width: 600px;">
+            <h3 style="margin-bottom:20px; text-align:center;">สร้างสูตรพืชใหม่ (Custom)</h3>
+            
+            <div class="form-group">
+                <label class="form-label">ชื่อสูตรพืช</label>
+                <input type="text" class="form-control" id="newRecipeName" placeholder="เช่น กัญชา (Auto)">
+            </div>
+
+            <div class="form-group">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <label class="form-label" style="margin:0;">ระยะการให้ปุ๋ย (Stages)</label>
+                    <button class="btn-sm btn-add" onclick="addStageRow()" style="font-size:12px;">+ เพิ่มระยะ</button>
+                </div>
+                
+                <div style="display:grid; grid-template-columns: 1.5fr 1fr 1fr 40px; gap:10px; margin-bottom:5px; padding:0 5px;">
+                    <small style="color:#aaa;">สิ้นสุดวันที่ (Day)</small>
+                    <small style="color:#aaa;">ค่า EC</small>
+                    <small style="color:#aaa;">ค่า pH</small>
+                    <small></small>
+                </div>
+
+                <div id="stageContainer" style="max-height:200px; overflow-y:auto; padding-right:5px;">
+                    </div>
+            </div>
+
+            <div style="margin-top:10px; border-top:1px solid #eee; padding-top:10px; text-align:right;">
+                <p style="font-size:14px; color:var(--text-main);">รวมระยะเวลาปลูก: <strong id="totalDaysDisplay" style="color:var(--primary-color);">0</strong> วัน</p>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="btn-action" style="flex:1; justify-content:center; background:#F4F7FE; color:var(--text-main);" onclick="closeModal('createRecipeModal')">ยกเลิก</button>
+                <button class="btn-action btn-primary" style="flex:1; justify-content:center;" onclick="confirmCreateRecipe()">บันทึกสูตร</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="addScheduleModal"><div class="modal-box"><h3 style="margin-bottom:20px; text-align:center;">เพิ่มลงตารางงานหลัก</h3><p style="color:var(--text-secondary); font-size:14px; margin-bottom:25px; text-align:center;">คุณกำลังจะเพิ่มสูตร <strong id="modalProfileName" style="color:var(--primary-color);"></strong> ลงในตารางงาน</p><div class="form-group"><label class="form-label">เริ่มปลูกวันที่</label><input type="date" class="form-control" id="inputStartDate"></div><div class="form-group"><label class="form-label">กำหนดเวลาทำงานในแต่ละวัน</label><div class="add-time-box"><input type="time" class="form-control" id="inputCustomTime" style="flex:1;"><button class="btn-action btn-primary" style="padding:10px 20px; font-size:14px;" onclick="addCustomTime()">+ เพิ่ม</button></div><div class="time-tags-container" id="timeTagsList"><div class="time-tag">08:00 <i class="fa-solid fa-xmark" onclick="removeTime(this)"></i></div><div class="time-tag">16:00 <i class="fa-solid fa-xmark" onclick="removeTime(this)"></i></div></div></div><div style="display:flex; gap:10px; margin-top:30px;"><button class="btn-action" style="flex:1; justify-content:center; background:#F4F7FE; color:var(--text-main);" onclick="closeModal('addScheduleModal')">ยกเลิก</button><button class="btn-action btn-primary" style="flex:1; justify-content:center;" onclick="confirmAddToSchedule()">ยืนยัน</button></div></div></div>
     <div class="modal-overlay" id="viewProfileModal"><div class="modal-box"><h3 style="margin-bottom:15px; text-align:center;" id="viewProfileTitle">รายละเอียดสูตร</h3><div style="overflow-y:auto; max-height:300px; padding: 5px;"><table class="custom-table" style="margin-top:0;"><thead><tr><th>ระยะ (วันที่)</th><th>ค่า EC</th><th>ค่า pH</th></tr></thead><tbody id="viewProfileBody"></tbody></table></div><div style="margin-top:25px; text-align: center;"><button class="btn-action" style="background:#F4F7FE; color:var(--text-main); width:100%; justify-content: center;" onclick="closeModal('viewProfileModal')">ปิด</button></div></div></div>
     <div class="modal-overlay" id="addSingleJobModal"><div class="modal-box"><h3 style="margin-bottom:20px; text-align:center;">เพิ่มงานใหม่ (Manual Add)</h3><div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;"><div class="form-group"><label class="form-label">วันที่</label><input type="date" class="form-control" id="newJobDate"></div><div class="form-group"><label class="form-label">เวลา</label><input type="time" class="form-control" id="newJobTime"></div></div><div class="form-group"><label class="form-label">ชื่องาน</label><input type="text" class="form-control" id="newJobName" placeholder="เช่น รดน้ำรอบพิเศษ"></div><div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;"><div class="form-group"><label class="form-label">Target EC</label><input type="number" step="0.1" class="form-control" id="newJobEC" value="1.0"></div><div class="form-group"><label class="form-label">Target pH</label><input type="number" step="0.1" class="form-control" id="newJobPH" value="6.0"></div></div><div style="display:flex; gap:10px; margin-top:20px;"><button class="btn-action" style="flex:1; justify-content:center; background:#F4F7FE; color:var(--text-main);" onclick="closeModal('addSingleJobModal')">ยกเลิก</button><button class="btn-action btn-primary" style="flex:1; justify-content:center;" onclick="saveSingleJob()">เพิ่มงาน</button></div></div></div>
@@ -396,7 +431,17 @@
         let profiles = [
             { id: 1, name: "ผักสลัด (Green Oak)", days: 45, stages: [{d:14, ec:0.8, ph:6.0}, {d:30, ec:1.2, ph:6.0}, {d:45, ec:1.6, ph:6.0}] },
             { id: 2, name: "เมล่อน (Melon)", days: 80, stages: [{d:20, ec:1.5, ph:6.2}, {d:40, ec:2.0, ph:6.2}, {d:80, ec:2.5, ph:6.5}] },
-            { id: 3, name: "กัญชง (Hemp)", days: 120, stages: [{d:30, ec:1.2, ph:6.0}, {d:60, ec:1.8, ph:6.0}, {d:120, ec:2.2, ph:6.2}] }
+            { 
+                id: 3, 
+                name: "กัญชา (Cannabis)", 
+                days: 120, 
+                stages: [
+                    { d: 15, ec: 0.6, ph: 6.0 },   // ระยะต้นกล้า
+                    { d: 45, ec: 1.5, ph: 6.2 },   // ระยะทำใบ
+                    { d: 105, ec: 2.0, ph: 6.2 },  // ระยะทำดอก
+                    { d: 120, ec: 0.1, ph: 6.5 }   // ระยะล้างราก
+                ] 
+            }
         ];
 
         let mainSchedule = []; 
@@ -412,8 +457,7 @@
             const errorEl = document.getElementById('loginError');
 
             if(userIn === 'admin' && passIn === 'admin') {
-                // Success
-                errorEl.style.display = 'none'; // ซ่อนแจ้งเตือน
+                errorEl.style.display = 'none';
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
                 
@@ -425,9 +469,7 @@
                 renderSchedule();
                 updateDashboard();
             } else { 
-                // Failed -> Show Inline Error
                 errorEl.style.display = 'flex';
-                // ถ้าอยากให้ช่องสั่นด้วย (Optional)
                 document.getElementById('password').value = '';
                 document.getElementById('password').focus();
             }
@@ -443,7 +485,6 @@
         }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-        // --- MOBILE MENU LOGIC (NEW) ---
         function toggleSidebar() {
             const sb = document.getElementById('sidebar');
             const overlay = document.querySelector('.overlay-bg');
@@ -463,7 +504,7 @@
             }
         }
 
-        // --- SYSTEM MODE (AUTO/MANUAL) ---
+        // --- SYSTEM MODE & DEVICE ---
         function toggleSystemMode() {
             isManualMode = !isManualMode;
             const container = document.querySelector('.mode-switch-container');
@@ -484,8 +525,6 @@
                 statusText.style.color = "var(--text-main)";
                 document.querySelector('.mode-option.active').classList.remove('active');
                 document.getElementById('modeAuto').classList.add('active');
-                
-                // Turn off devices when switching back to Auto (Reset)
                 document.querySelectorAll('.device-card.active').forEach(card => {
                     card.classList.remove('active');
                     card.querySelector('.device-status').innerText = 'OFF';
@@ -495,7 +534,6 @@
             }
         }
 
-        // --- DEVICE CONTROL (SMART TOGGLE) ---
         function toggleDevice(el) {
             if (!isManualMode) {
                 Swal.fire({
@@ -508,17 +546,13 @@
                     confirmButtonText: 'ใช่, เปลี่ยนโหมด',
                     cancelButtonText: 'ไม่, ยกเลิก'
                 }).then((result) => {
-                    if (result.isConfirmed) {
-                        toggleSystemMode(); 
-                    }
+                    if (result.isConfirmed) { toggleSystemMode(); }
                 });
                 return;
             }
-
             el.classList.toggle('active');
             const status = el.querySelector('.device-status');
             const icon = el.querySelector('.device-icon');
-            
             if(el.classList.contains('active')) {
                 status.innerText = 'ON';
                 status.style.color = 'var(--success-color)';
@@ -530,13 +564,11 @@
             }
         }
 
-        // --- HELPER: SET DEVICE VISUAL STATE (FOR AUTO SIMULATION) ---
         function setDeviceState(deviceId, isActive) {
             const el = document.getElementById(deviceId);
             if(!el) return;
             const status = el.querySelector('.device-status');
             const icon = el.querySelector('.device-icon');
-            
             if(isActive) {
                 el.classList.add('active');
                 status.innerText = 'ON (Auto)';
@@ -550,24 +582,19 @@
             }
         }
 
-        // --- SEARCH & FILTER LOGIC (NEW) ---
+        // --- SEARCH ---
         function filterRecipes(text) {
             const val = text.toLowerCase();
             const rows = document.querySelectorAll('#profileTableBody tr');
             rows.forEach(row => {
                 const nameDiv = row.querySelector('td:first-child div:first-child');
                 if(nameDiv) {
-                    const name = nameDiv.innerText.toLowerCase();
-                    if(name.includes(val)) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
+                    if(nameDiv.innerText.toLowerCase().includes(val)) { row.style.display = ''; } else { row.style.display = 'none'; }
                 }
             });
         }
 
-        // --- PROFILE & SCHEDULE LOGIC ---
+        // --- PROFILE LOGIC ---
         function renderProfiles() {
             const tbody = document.getElementById('profileTableBody');
             tbody.innerHTML = '';
@@ -607,40 +634,86 @@
             })
         }
 
+        // --- NEW: DYNAMIC RECIPE CREATION ---
         function openCreateRecipeModal() {
             document.getElementById('newRecipeName').value = '';
-            document.getElementById('newRecipeDays').value = '';
-            document.getElementById('newRecipeEC').value = '1.0';
-            document.getElementById('newRecipePH').value = '6.0';
+            document.getElementById('stageContainer').innerHTML = ''; 
+            document.getElementById('totalDaysDisplay').innerText = '0';
+            
+            // Add default first stage
+            addStageRow(15, 1.0, 6.0); 
+            
             document.getElementById('createRecipeModal').style.display = 'flex';
+        }
+
+        function addStageRow(d='', ec='', ph='') {
+            const div = document.createElement('div');
+            div.className = 'stage-row';
+            div.style.cssText = "display:grid; grid-template-columns: 1.5fr 1fr 1fr 40px; gap:10px; margin-bottom:10px;";
+            div.innerHTML = `
+                <input type="number" class="form-control input-day" placeholder="เช่น 15" value="${d}" onchange="updateTotalDays()">
+                <input type="number" step="0.1" class="form-control input-ec" placeholder="EC" value="${ec}">
+                <input type="number" step="0.1" class="form-control input-ph" placeholder="pH" value="${ph}">
+                <button class="btn-sm btn-del" style="justify-content:center; width:100%;" onclick="removeStageRow(this)"><i class="fa-solid fa-trash"></i></button>
+            `;
+            document.getElementById('stageContainer').appendChild(div);
+            updateTotalDays();
+        }
+
+        function removeStageRow(btn) {
+            btn.parentElement.remove();
+            updateTotalDays();
+        }
+
+        function updateTotalDays() {
+            let maxDay = 0;
+            document.querySelectorAll('.input-day').forEach(inp => {
+                const val = parseInt(inp.value) || 0;
+                if(val > maxDay) maxDay = val;
+            });
+            document.getElementById('totalDaysDisplay').innerText = maxDay;
         }
 
         function confirmCreateRecipe() {
             const name = document.getElementById('newRecipeName').value;
-            const days = parseInt(document.getElementById('newRecipeDays').value);
-            const ec = parseFloat(document.getElementById('newRecipeEC').value) || 1.0;
-            const ph = parseFloat(document.getElementById('newRecipePH').value) || 6.0;
+            const rows = document.querySelectorAll('.stage-row');
+            
+            if(!name) { Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกชื่อสูตร', 'warning'); return; }
+            if(rows.length === 0) { Swal.fire('ข้อมูลไม่ครบ', 'ต้องมีระยะการปลูกอย่างน้อย 1 ช่วง', 'warning'); return; }
 
-            if(!name || !days) { Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกชื่อและจำนวนวัน', 'warning'); return; }
+            let newStages = [];
+            let isValid = true;
 
-            const stageDay = Math.floor(days / 3);
+            rows.forEach(row => {
+                const d = parseInt(row.querySelector('.input-day').value);
+                const ec = parseFloat(row.querySelector('.input-ec').value);
+                const ph = parseFloat(row.querySelector('.input-ph').value);
+
+                if(!d || isNaN(ec) || isNaN(ph)) { isValid = false; }
+                newStages.push({ d: d, ec: ec, ph: ph });
+            });
+
+            if(!isValid) { Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกตัวเลขให้ครบทุกช่อง', 'warning'); return; }
+
+            // Sort by day to be safe
+            newStages.sort((a, b) => a.d - b.d);
+            
+            const totalDays = newStages[newStages.length - 1].d;
+
             const newProfile = {
                 id: Date.now(),
                 name: name,
-                days: days,
-                stages: [
-                    {d: stageDay, ec: ec, ph: ph},
-                    {d: stageDay * 2, ec: ec, ph: ph},
-                    {d: days, ec: ec, ph: ph}
-                ]
+                days: totalDays,
+                stages: newStages
             };
 
             profiles.push(newProfile);
             renderProfiles();
             closeModal('createRecipeModal');
-            Swal.fire('สำเร็จ', `สร้างสูตร ${name} เรียบร้อย`, 'success');
+            Swal.fire('บันทึกสำเร็จ', `สร้างสูตร ${name} (${totalDays} วัน) เรียบร้อย`, 'success');
         }
 
+        // --- SCHEDULE & VIEW ---
         function viewProfileDetails(id) {
             const p = profiles.find(x => x.id == id);
             document.getElementById('viewProfileTitle').innerText = `รายละเอียดสูตร: ${p.name}`;
@@ -698,8 +771,12 @@
                 rowDate.setDate(startDate.getDate() + (i - 1));
                 const dateString = rowDate.toISOString().split('T')[0];
                 let stage = p.stages.find(s => i <= s.d); 
-                let ec = stage ? stage.ec : p.stages[p.stages.length-1].ec;
-                let ph = stage ? stage.ph : 6.0;
+                
+                // Fallback logic if stage is missing (should not happen with sorted data)
+                if (!stage) stage = p.stages[p.stages.length-1];
+
+                let ec = stage.ec;
+                let ph = stage.ph;
                 
                 tempTimes.forEach(time => {
                     mainSchedule.push({ id: Date.now() + Math.random(), date: dateString, time: time, taskName: `${p.name} (Day ${i})`, ec: ec, ph: ph, status: 'pending', enabled: true });
@@ -759,70 +836,37 @@
             if(nextJob) { document.getElementById('dash_target_ec').innerText = nextJob.ec; document.getElementById('dash_target_ph').innerText = nextJob.ph; } else { document.getElementById('dash_target_ec').innerText = '-'; document.getElementById('dash_target_ph').innerText = '-'; }
         }
 
-        // --- UPDATED RUN SIMULATION (SEQUENTIAL) ---
+        // --- SIMULATION ---
         function runNextJob() {
             if(isManualMode) { Swal.fire('โหมด Manual', 'กรุณาปรับเป็น Auto เพื่อเริ่มการทำงานตามตาราง', 'warning'); return; }
             const job = mainSchedule.find(j => j.status === 'pending' && j.enabled);
             if(!job) { Swal.fire('ไม่มีงานค้าง', 'ตารางงานว่างเปล่า', 'info'); return; }
             
-            job.status = 'running'; 
-            renderSchedule(); 
-            updateDashboard();
-            
+            job.status = 'running'; renderSchedule(); updateDashboard();
             const statusText = document.getElementById('sys_status');
-            statusText.innerText = "Running... 0%"; 
-            statusText.style.color = "var(--primary-color)";
+            statusText.innerText = "Running... 0%"; statusText.style.color = "var(--primary-color)";
             document.getElementById('icon_status').style.color = "var(--primary-color)";
             document.getElementById('icon_status').innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin"></i>';
             
-            let tankLevel = 10; 
-            const tankEl = document.getElementById('mixTank');
-            
+            let tankLevel = 10; const tankEl = document.getElementById('mixTank');
             if(activeInterval) clearInterval(activeInterval);
             activeInterval = setInterval(() => {
-                tankLevel += 0.5; 
-                tankEl.style.height = tankLevel + '%'; 
+                tankLevel += 0.5; tankEl.style.height = tankLevel + '%'; 
                 statusText.innerText = `Running... ${Math.floor(tankLevel)}%`;
                 
-                // SEQUENTIAL LOGIC
-                if (tankLevel < 40) {
-                    setDeviceState('dev_pumpA', true);
-                    setDeviceState('dev_pumpB', false);
-                    setDeviceState('dev_pumpMix', false);
-                } else if (tankLevel < 70) {
-                    setDeviceState('dev_pumpA', false);
-                    setDeviceState('dev_pumpB', true);
-                    setDeviceState('dev_pumpMix', false);
-                } else {
-                    setDeviceState('dev_pumpA', false);
-                    setDeviceState('dev_pumpB', false);
-                    setDeviceState('dev_pumpMix', true);
-                }
+                if (tankLevel < 40) { setDeviceState('dev_pumpA', true); setDeviceState('dev_pumpB', false); setDeviceState('dev_pumpMix', false); } 
+                else if (tankLevel < 70) { setDeviceState('dev_pumpA', false); setDeviceState('dev_pumpB', true); setDeviceState('dev_pumpMix', false); } 
+                else { setDeviceState('dev_pumpA', false); setDeviceState('dev_pumpB', false); setDeviceState('dev_pumpMix', true); }
 
                 if(tankLevel >= 90) {
-                    clearInterval(activeInterval); 
-                    activeInterval = null; 
-                    job.status = 'success';
-                    
-                    // Reset All Devices OFF
-                    setDeviceState('dev_pumpA', false);
-                    setDeviceState('dev_pumpB', false);
-                    setDeviceState('dev_pumpMix', false);
-                    setDeviceState('dev_pumpUp', false);
-                    setDeviceState('dev_pumpDown', false);
-                    
-                    statusText.innerText = "Standby (Auto)"; 
-                    statusText.style.color = "var(--text-main)";
-                    document.getElementById('icon_status').style.color = "#A3AED0";
-                    document.getElementById('icon_status').innerHTML = '<i class="fa-solid fa-robot"></i>';
+                    clearInterval(activeInterval); activeInterval = null; job.status = 'success';
+                    setDeviceState('dev_pumpA', false); setDeviceState('dev_pumpB', false); setDeviceState('dev_pumpMix', false); setDeviceState('dev_pumpUp', false); setDeviceState('dev_pumpDown', false);
+                    statusText.innerText = "Standby (Auto)"; statusText.style.color = "var(--text-main)";
+                    document.getElementById('icon_status').style.color = "#A3AED0"; document.getElementById('icon_status').innerHTML = '<i class="fa-solid fa-robot"></i>';
                     tankEl.style.height = '10%'; 
-                    
                     const tbody = document.getElementById('historyTableBody');
                     tbody.innerHTML = `<tr><td>${formatDate(job.date)} ${job.time}</td><td>${job.taskName}</td><td>EC ${job.ec} (OK)</td><td><span class="status-badge bg-success">Success</span></td></tr>` + tbody.innerHTML;
-                    
-                    renderSchedule(); 
-                    updateDashboard(); 
-                    Swal.fire('เรียบร้อย', `งาน ${job.taskName} รอบ ${job.time} เสร็จสิ้นแล้ว`, 'success');
+                    renderSchedule(); updateDashboard(); Swal.fire('เรียบร้อย', `งาน ${job.taskName} รอบ ${job.time} เสร็จสิ้นแล้ว`, 'success');
                 }
             }, 50); 
         }
@@ -831,26 +875,15 @@
             if(activeInterval) {
                 clearInterval(activeInterval); activeInterval = null;
                 const runningJob = mainSchedule.find(j => j.status === 'running'); if(runningJob) runningJob.status = 'pending';
-                
-                // Reset Visuals
-                setDeviceState('dev_pumpA', false);
-                setDeviceState('dev_pumpB', false);
-                setDeviceState('dev_pumpMix', false);
-                setDeviceState('dev_pumpUp', false);
-                setDeviceState('dev_pumpDown', false);
-
+                setDeviceState('dev_pumpA', false); setDeviceState('dev_pumpB', false); setDeviceState('dev_pumpMix', false); setDeviceState('dev_pumpUp', false); setDeviceState('dev_pumpDown', false);
                 document.getElementById('mixTank').style.height = '10%'; 
-                document.getElementById('sys_status').innerText = "Emergency Stop"; 
-                document.getElementById('sys_status').style.color = "var(--danger-color)"; 
-                document.getElementById('icon_status').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>'; 
-                document.getElementById('icon_status').style.color = "var(--danger-color)";
-                
+                document.getElementById('sys_status').innerText = "Emergency Stop"; document.getElementById('sys_status').style.color = "var(--danger-color)"; 
+                document.getElementById('icon_status').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>'; document.getElementById('icon_status').style.color = "var(--danger-color)";
                 renderSchedule(); updateDashboard(); 
                 Swal.fire({ title: 'หยุดฉุกเฉิน!', text: 'ระบบถูกตัดการทำงานทันที', icon: 'error', confirmButtonColor: '#EE5D50' }).then(() => { 
                     document.getElementById('sys_status').innerText = isManualMode ? "Manual Mode" : "Standby (Auto)"; 
                     document.getElementById('sys_status').style.color = isManualMode ? "var(--warning-color)" : "var(--text-main)"; 
-                    document.getElementById('icon_status').innerHTML = '<i class="fa-solid fa-robot"></i>'; 
-                    document.getElementById('icon_status').style.color = "#A3AED0"; 
+                    document.getElementById('icon_status').innerHTML = '<i class="fa-solid fa-robot"></i>'; document.getElementById('icon_status').style.color = "#A3AED0"; 
                 });
             } else { Swal.fire('ระบบไม่ได้ทำงาน', 'ไม่มีการทำงานให้หยุด', 'info'); }
         }
